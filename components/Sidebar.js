@@ -1,30 +1,69 @@
 import styled from "styled-components";
 import { Avatar ,IconButton,Button} from "@material-ui/core";
+import {useAuthState} from 'react-firebase-hooks/auth';
 import ChatIcon from "@material-ui/icons/Chat";
 import MoreVertIcon from "@material-ui/icons/Morevert";
 import SearchIcon from "@material-ui/icons/Search";
 import * as Emailvalidator from 'email-validator';
-function Sidebar() {
-  
-const createChat =()=>{
-    const input=prompt('Enter user email address');
+import { collection, addDoc } from "firebase/firestore";
+import {auth,app,db} from "../firebase"
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { useEffect } from "react";
 
+
+function Sidebar() {
+    //const [user]=useAuthState(auth);
+    const [user] = typeof window !== "undefined" && useAuthState(auth);
+    
+const createChat =async ()=>{
+    const input=prompt('Enter user email address');
+    
     if(!input) return null;
 
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+
+    if (Emailvalidator.validate(input)) {
+        try {
+          const chatRef = await addDoc(collection(db, "chats"), {
+            users: [user.email, input],
+          });
+          console.log("Chat added with ID: ", chatRef.id);
+        } catch (error) {
+          console.error("Error adding chat: ", error);
+        }
+      }
+    };
     //check mail exist (validator) install react firebase hooks
 
-    if(Emailvalidator.validate(input)){
-            // #we need to add chatr into db chat 
+    // if(Emailvalidator.validate(input)){
+    //         // #we need to add chatr into db chat 
+    //         // each document is a chat 
+    //         // collections of chat having documents each of which is 
+    //         // a colelction of chats of that user which has a user 
+    //         // array each with his login email the first user
+    //         // then the second user email which we will enter as i/p
+    //         db.collection('chats').add({
+    //             users:[user.email,input],
+                
+    //         })
+    // }
+    
+   
+   
 
 
-    }
-
-}
-
+const handleSignOut = () => {
+    auth.signOut()
+      .catch(error => {
+        console.error('Error signing out:', error);
+      });
+  }
+  
     return (
         <Container>
             <Header>
-                <UserAvatar/>
+                <UserAvatar onClick={handleSignOut}/>
                 <IconsContainer>
                     <IconButton>
                         <ChatIcon/>
@@ -47,7 +86,7 @@ const createChat =()=>{
         </Container>
         
     );
-}
+    }
 export default Sidebar;
 
 //   `` -> used for styled-components
