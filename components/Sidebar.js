@@ -1,20 +1,59 @@
-import styled from "styled-components";
-import { Avatar ,IconButton,Button} from "@material-ui/core";
+
 import {useAuthState} from 'react-firebase-hooks/auth';
+import {useCollection} from "react-firebase-hooks/firestore";
+import styled from "styled-components";
+import { Avatar, IconButton, Button } from "@material-ui/core";
+import { useState, useEffect } from "react";
 import ChatIcon from "@material-ui/icons/Chat";
 import MoreVertIcon from "@material-ui/icons/Morevert";
 import SearchIcon from "@material-ui/icons/Search";
-import * as Emailvalidator from 'email-validator';
-import { collection, addDoc } from "firebase/firestore";
-import {auth,app,db} from "../firebase"
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { useEffect } from "react";
-
-
-function Sidebar() {
-    //const [user]=useAuthState(auth);
-    const [user] = typeof window !== "undefined" && useAuthState(auth);
+import * as EmailValidator from "email-validator";
+import { auth, app, db } from "../firebase";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+} from "firebase/firestore";
+import Chat from "./Chat";
+ function Sidebar() {
     
+    const [user] = typeof window !== "undefined" && useAuthState(auth);
+
+
+    const [chatSnapshot, setChatSnapshot] = useState(null); //chatsnap has all user current docs
+      
+        useEffect(() => {
+          const fetchChatSnapshot = async () => {
+
+            const userChatRef = query(
+              collection(db, "chats"),
+              where("users", "array-contains", user.email)
+            );
+
+            const snapshot = await getDocs(userChatRef);
+    
+            setChatSnapshot(snapshot);
+           
+          };
+      
+          fetchChatSnapshot();
+          
+        }, [user]);
+      //u get dofc ie chatsanphot , .data() of it gives every shit
+      const chatAlreadyExists = (recipientEmail) => {
+        return chatSnapshot.docs.some((chat) => {
+          const users = chat.data().users;
+          return users.includes(recipientEmail);
+        });
+      };
+      
 const createChat =async ()=>{
     const input=prompt('Enter user email address');
     
@@ -22,36 +61,27 @@ const createChat =async ()=>{
 
     const auth = getAuth(app);
     const user = auth.currentUser;
-
-    if (Emailvalidator.validate(input)) {
+    
+    if (input === user.email) {
+      alert("You can't create a chat with yourself!");
+      return null;
+    }
+   
+    if (EmailValidator.validate(input) && !chatAlreadyExists(input) && input !==user.email) {
         try {
           const chatRef = await addDoc(collection(db, "chats"), {
-            users: [user.email, input],
+            users: [user.email, input],  //putting both users name in the collection as array
           });
           console.log("Chat added with ID: ", chatRef.id);
+          
         } catch (error) {
           console.error("Error adding chat: ", error);
         }
       }
+    else{
+        alert("chat already exists")
+    }
     };
-    //check mail exist (validator) install react firebase hooks
-
-    // if(Emailvalidator.validate(input)){
-    //         // #we need to add chatr into db chat 
-    //         // each document is a chat 
-    //         // collections of chat having documents each of which is 
-    //         // a colelction of chats of that user which has a user 
-    //         // array each with his login email the first user
-    //         // then the second user email which we will enter as i/p
-    //         db.collection('chats').add({
-    //             users:[user.email,input],
-                
-    //         })
-    // }
-    
-   
-   
-
 
 const handleSignOut = () => {
     auth.signOut()
@@ -59,11 +89,13 @@ const handleSignOut = () => {
         console.error('Error signing out:', error);
       });
   }
-  
+
+
     return (
-        <Container>
+        <div>
+            <Container>
             <Header>
-                <UserAvatar onClick={handleSignOut}/>
+                <UserAvatar src={user.photoURL} onClick={handleSignOut}/>
                 <IconsContainer>
                     <IconButton>
                         <ChatIcon/>
@@ -80,14 +112,19 @@ const handleSignOut = () => {
             </Search>
 
             <SideBarButton onClick={createChat}>new chat</SideBarButton>
-               
-            {/* ListofChats */}
+            
+             {chatSnapshot?.docs.map((chat)=>(
+                <Chat key={chat.id} id={chat.id} users={chat.data().users}/>
+            ))}
+            {/* //rendering existing chats for the current user is abv */}
 
         </Container>
+        </div>
+        
         
     );
     }
-export default Sidebar;
+
 
 //   `` -> used for styled-components
 const Container = styled.div`
@@ -148,3 +185,8 @@ const SideBarButton = styled(Button)`
     
 
 `;
+
+
+export default Sidebar;
+
+ 
