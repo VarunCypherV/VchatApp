@@ -4,7 +4,8 @@ import getRecipientEmail from "../Utils/getRecipientEmail";
 import {useAuthState} from 'react-firebase-hooks/auth';
 import { auth, app, db } from "../firebase";
 import { useRouter } from "next/router";
-
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { useDocument } from "react-firebase-hooks/firestore";
 
 function Chat({id , users}) {
     const [user] = typeof window !== "undefined" && useAuthState(auth);
@@ -13,17 +14,16 @@ function Chat({id , users}) {
 
     
     //might me error below line
-    const recipientSnapshot = useCollection(db.collection('users'.where('email','==',getRecipientEmail(users,user))));
-//     import { collection, query, where, getDocs } from "firebase/firestore";
-// import { useDocument } from "react-firebase-hooks/firestore";
+    //const recipientSnapshot = useCollection(db.collection('users'.where('email','==',getRecipientEmail(users,user))));
 
-// // ...
 
-// const recipientQuery = query(
-//   collection(db, "users"),
-//   where("email", "==", getRecipientEmail(users, user))
-// );
-// const recipientSnapshot = useDocument(recipientQuery);
+const recipientQuery = query(
+  collection(db, "users"),
+  where("email", "==", getRecipientEmail(users, user))
+);
+const recipientSnapshot = useDocument(recipientQuery);
+
+
     const recipient=recipientSnapshot?.docs?.[0]?.data();
     
     const enterChat=()=>{
