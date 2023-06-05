@@ -1,9 +1,11 @@
+
 // wild card index js
 import styled from "styled-components";
 import Head from "next/head";
 import Sidebar from "../../components/sidebar";
 import ChatScreen from "../../components/ChatScreen";
 import { doc, getFirestore } from "firebase/firestore";
+import { query, collectionGroup, orderBy, getDocs , getDoc} from "firebase/firestore";
 import {useAuthState} from 'react-firebase-hooks/auth';
 import getRecipientEmail from "../../Utils/getRecipientEmail";
 function Chat({chat , messages}) {
@@ -31,11 +33,16 @@ export async function getServerSideProps(context){
     
     const db = getFirestore();
     const ref = doc(db, "chats", context.query.id);
+    
     //prep the msg on server to render
-    const messagesRes = await ref.collection("messages")
-    .order("timestamp","asc")
-    .get();
-
+    // const messagesRes = await ref.collection("messages")
+    // .order("timestamp","asc")
+    // .get();
+    const messagesQuery = query(
+        collectionGroup(db, "messages"),
+        orderBy("timestamp", "asc")
+      );
+      const messagesRes = await getDocs(messagesQuery);
     //spread the messages and prep the message
     const messages = messagesRes.docs.map((doc) => ({
             id: doc.id,
@@ -50,7 +57,9 @@ export async function getServerSideProps(context){
         );
 
     // prep the chats on server
-    const chatRes = await ref.get();
+    const chatDoc = doc(db, "chats", context.query.id); //xxx
+    const chatRes = await getDoc(chatDoc); //xx
+
     const chat={
         id: chatRes.id,
         ...chatRes.data()

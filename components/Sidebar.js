@@ -23,32 +23,25 @@ import {
 } from "firebase/firestore";
 import Chat from "./Chat";
  function Sidebar() {
-    
     const [user] = typeof window !== "undefined" && useAuthState(auth);
-
-
     const [chatSnapshot, setChatSnapshot] = useState(null); //chatsnap has all user current docs
-      
-        useEffect(() => {
+      //error dont set state inside useEff
+    useEffect(() => {
           const fetchChatSnapshot = async () => {
-
             const userChatRef = query(
               collection(db, "chats"),
               where("users", "array-contains", user.email)
             );
-
+            console.log(userChatRef);
             const snapshot = await getDocs(userChatRef);
-    
             setChatSnapshot(snapshot);
-           
-          };
-      
-          fetchChatSnapshot();
-          
+          };  
+          fetchChatSnapshot(); 
         }, [user]);
+      
       //u get dofc ie chatsanphot , .data() of it gives every shit
       const chatAlreadyExists = (recipientEmail) => {
-        return chatSnapshot.docs.some((chat) => {
+        return chatSnapshot?.docs.some((chat) => {  //?. change
           const users = chat.data().users;
           return users.includes(recipientEmail);
         });
@@ -128,7 +121,18 @@ const handleSignOut = () => {
 
 //   `` -> used for styled-components
 const Container = styled.div`
-    
+    flex: 0.45;
+    border-right: 1px solid whitesmoke;
+    height: 100vh;
+    min-width:300px;
+    max-width:350px;
+    overflow-y:scroll;
+
+    ::-webkit-scrollbar{
+      display:none;
+    }
+    -ms-overflow-style : none;
+    scrollbar-width:none;
 
 `; 
 const Header = styled.div`
