@@ -1,6 +1,5 @@
 
 import {useAuthState} from 'react-firebase-hooks/auth';
-import {useCollection} from "react-firebase-hooks/firestore";
 import styled from "styled-components";
 import { Avatar, IconButton, Button } from "@material-ui/core";
 import { useState, useEffect } from "react";
@@ -10,9 +9,7 @@ import SearchIcon from "@material-ui/icons/Search";
 import * as EmailValidator from "email-validator";
 import { auth, app, db } from "../firebase";
 import {
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
+  getAuth
 } from "firebase/auth";
 import {
   collection,
@@ -22,23 +19,79 @@ import {
   addDoc,
 } from "firebase/firestore";
 import Chat from "./Chat";
+import { useCallback } from 'react';
+ 
+//solution 3
+// const [chatSnapshot, setChatSnapshot] = useState(null);
+// const fetchChatSnapshot = useCallback(
+//           async () => {
+//             const userChatRef = query(
+//               collection(db, "chats"),
+//               where("users", "array-contains", user.email)
+//             );
+//             const snapshot = await getDocs(userChatRef);
+//             return snapshot;
+//           });  
+
+
  function Sidebar() {
     const [user] = typeof window !== "undefined" && useAuthState(auth);
-    const [chatSnapshot, setChatSnapshot] = useState(null); //chatsnap has all user current docs
-      //error dont set state inside useEff
-    useEffect(() => {
-          const fetchChatSnapshot = async () => {
-            const userChatRef = query(
-              collection(db, "chats"),
-              where("users", "array-contains", user.email)
-            );
-            console.log(userChatRef);
-            const snapshot = await getDocs(userChatRef);
-            setChatSnapshot(snapshot);
-          };  
-          fetchChatSnapshot(); 
-        }, [user]);
-      
+    
+    
+
+    // const [chatSnapshot, setChatSnapshot] = useState(null); //chatsnap has all user current docs
+    // useEffect(() => {
+    //       const fetchChatSnapshot = async () => {
+    //         const userChatRef = query(
+    //           collection(db, "chats"),
+    //           where("users", "array-contains", user.email)
+    //         );
+    //         console.log(userChatRef);
+    //         const snapshot = await getDocs(userChatRef);
+    //         setChatSnapshot(snapshot);
+    //       };  
+    //       fetchChatSnapshot(); 
+    //     }, [user]);
+
+    //solution 1
+    // const [chatSnapshot, setChatSnapshot] = useState(null); //chatsnap has all user current docs
+    // useEffect(() => {
+    //       const fetchChatSnapshot = async () => {
+    //         const userChatRef = query(
+    //           collection(db, "chats"),
+    //           where("users", "array-contains", user.email)
+    //         );
+    //         const snapshot = await getDocs(userChatRef);
+    //         setChatSnapshot(snapshot);
+    //       };  
+    //       fetchChatSnapshot(); 
+    //     }, []);
+
+
+    //solution 2
+    // const [chatSnapshot, setChatSnapshot] = useState(null); //chatsnap has all user current docs
+    // useEffect(() => {
+    //       const fetchChatSnapshot = useCallback(
+    //         async () => {
+    //           const userChatRef = query(
+    //             collection(db, "chats"),
+    //             where("users", "array-contains", user.email)
+    //           );
+    //           const snapshot = await getDocs(userChatRef);
+    //           setChatSnapshot(snapshot);
+    //         });  
+    //         fetchChatSnapshot(); 
+    //     }, [user]);
+
+    //solution 3 
+    // useEffect(() => {
+            
+    //           fetchChatSnapshot().then(setChatSnapshot); 
+    //       }, [user]);
+    //   there is part of soln outside sidebarfunc
+
+//TRY SOLUTION 2-->3--->1
+//ttps://www.youtube.com/watch?v=YmpWOTT2qdw
       //u get dofc ie chatsanphot , .data() of it gives every shit
       const chatAlreadyExists = (recipientEmail) => {
         return chatSnapshot?.docs.some((chat) => {  //?. change

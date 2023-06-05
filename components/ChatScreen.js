@@ -8,11 +8,12 @@ import  AttachFileIcon  from "@material-ui/icons/AttachFile";
 import InsertEmoticonIcon from '@mui/icons-material/InsertEmoticon';
 import MicIcon from "@material-ui/icons/Mic";
 import { useState } from "react";
-import { doc, setDoc, serverTimestamp, collection, addDoc , useFirestoreCollectionData } from "firebase/firestore";
-import { auth, app, db } from "../firebase";
-import getRecipientEmail from "../../Utils/getRecipientEmail";
+import { doc, setDoc, serverTimestamp, collection, addDoc , useFirestoreCollectionData , query, where, getDocs } from "firebase/firestore";
+import { auth, db } from "../firebase";
+import getRecipientEmail from "../Utils/getRecipientEmail";
 import TimeAgo from "timeago-react";
 import { useRef } from "react";
+
 
 function ChatScreen({chat,messages}) {
     const [user] = typeof window !== "undefined" && useAuthState(auth);
@@ -21,7 +22,6 @@ function ChatScreen({chat,messages}) {
     const messagesRef = collection(db, "chats", router.query.id, "messages");
     const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
     const [messagesSnapshot] = useFirestoreCollectionData(messagesQuery);
-    //const [messagesSnapshot]= useCollection(db.collection('chats').doc(router.query.id).collection('messages').orderBy("timestamp","asc"));
     const [input , setInput]=useState("");
 
     //client render
@@ -40,7 +40,7 @@ function ChatScreen({chat,messages}) {
             });
         } else{
             return JSON.parse(messages).map(message =>{
-                <Message key ={message.id} user={message.user} messahe={message}/>
+                <Message key ={message.id} user={message.user} message={message}/>
             })
         }
         //server side
@@ -50,27 +50,6 @@ function ChatScreen({chat,messages}) {
     const sendMessage = (e) => {
         e.preventDefault(); //to prevent refresh
 
-        //error updatin last seen
-        // db.collection("users").doc(user.uid).set({
-        //     lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-        // },{merge:true});
-
-        // db.collection("chats").doc(router.query.id).collection("messages").add({
-        //     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        //     message:input,
-        //     user: user.email,
-        //     photoURL: user.photoURL,
-        // });
-        // const updateUserLastSeen = async (db, userId) => {
-        //     const userRef = doc(db, "users", userId);
-        //     await setDoc(
-        //       userRef,
-        //       {
-        //         lastSeen: serverTimestamp()
-        //       },
-        //       { merge: true }
-        //     );
-        //   };
         const userRef = doc(db, "users", user.uid);
         setDoc(
           userRef,
@@ -79,32 +58,31 @@ function ChatScreen({chat,messages}) {
           },
           { merge: true }
         );
-          // Adding a new document to "messages" subcollection
-        //   const addNewMessage = async (db, chatId, input, user) => {
-        //     const messagesRef = collection(db, "chats", chatId, "messages");
-        //     await addDoc(messagesRef, {
-        //       timestamp: serverTimestamp(),
-        //       message: input,
-        //       user: user.email,
-        //       photoURL: user.photoURL
-        //     });
-        //   };
+
         const messagesRef = collection(db, "chats", router.query.id, "messages");
-addDoc(messagesRef, {
-  timestamp: serverTimestamp(),
-  message: input,
-  user: user.email,
-  photoURL: user.photoURL
-});
+        addDoc(messagesRef, {
+            timestamp: serverTimestamp(),
+            message: input,
+            user: user.email,
+            photoURL: user.photoURL
+        });
         setInput("");
     }
 
 
     const recipientEmail = getRecipientEmail(chat.users,user);
-    const [recipientSnapshot]= useCollection(
-        db.collection("users").where("email", "==",recipientEmail
-    ));
-//recipient details
+
+    // const [recipientSnapshot]= useCollection(
+    //     db.collection("users").where("email", "==",recipientEmail
+    // ));
+
+    const q = query(collection(db, "users"), where("email", "==", recipientEmail));
+    const getDocuments = async () => {
+        const recipientSnapshot = await getDocs(q);
+};
+    getDocuments();
+
+
     const recipient = recipientSnapshot?.docs?.[0]?.data();
 
     const ScrollTOBottom =()=>{
@@ -206,13 +184,6 @@ const EndOfMessage = styled.div`
 `;
 
 const Inputs = styled.input`
-    /* flex:1;
-    align-items:center;
-    padding:10px;
-    position:sticky;
-    bottom:0;
-    background-color:whitesmoke;
-    z-index:100; */
     flex:1;
     outline:none;
     border:none;

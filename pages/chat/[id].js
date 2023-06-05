@@ -8,6 +8,7 @@ import { doc, getFirestore } from "firebase/firestore";
 import { query, collectionGroup, orderBy, getDocs , getDoc} from "firebase/firestore";
 import {useAuthState} from 'react-firebase-hooks/auth';
 import getRecipientEmail from "../../Utils/getRecipientEmail";
+import { auth, db } from "../../firebase";
 function Chat({chat , messages}) {
 
 
@@ -30,14 +31,9 @@ export default Chat;
 
 export async function getServerSideProps(context){
     // server side rendering of the chats that has to be refreshed
-    
     const db = getFirestore();
     const ref = doc(db, "chats", context.query.id);
-    
     //prep the msg on server to render
-    // const messagesRes = await ref.collection("messages")
-    // .order("timestamp","asc")
-    // .get();
     const messagesQuery = query(
         collectionGroup(db, "messages"),
         orderBy("timestamp", "asc")

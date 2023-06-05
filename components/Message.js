@@ -1,11 +1,9 @@
-import { ModeComment } from "@material-ui/icons";
 import styled from "styled-components";
 import moment from "moment/moment";
 
 function Message({user,message}) {
     const [userLoggedIn]=useAuthState(user);
     //sender or reciever detection logic for styling
-
     const TypeOfMessage = user === userLoggedIn.email ? Sender : Reciever;
 
     return (
@@ -25,7 +23,6 @@ export default Message;
 const Container = styled.div`
 
 `
-
 const MessageElement = styled.p`
     width: fit-content;
     padding :15px;
@@ -40,7 +37,7 @@ const Sender = styled(MessageElement)`
     background-color:#dcf8c6;
 `
 const Reciever = styled(MessageElement)`
-    margin-right:auto; //alligh left
+    margin-right:auto; //allign left
     background-color:whitesmoke;
 `
 const Timestamp = styled.span`
